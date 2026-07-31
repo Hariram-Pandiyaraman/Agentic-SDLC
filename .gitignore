@@ -1,0 +1,85 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging and build outputs
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.toml
+.streamlit/secrets.toml
+
+# Generated SDLC artifacts
+artifacts/*
+!artifacts/.gitkeep
+runs/
+exports/
+generated/
+
+# Local databases and Neo4j runtime data
+data/
+neo4j/data/
+neo4j/logs/
+neo4j/import/
+neo4j/plugins/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and runtime files
+logs/
+*.log
+*.pid
+*.pid.lock
+.langgraph_api/
+
+# Test and type-check artifacts
+.tox/
+.nox/
+junit.xml
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Docker local overrides
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak

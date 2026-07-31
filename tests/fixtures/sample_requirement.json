@@ -1,0 +1,27 @@
+{
+  "requirement_id": "REQ-001",
+  "title": "Traceable feature delivery",
+  "feature_intent": "Automate feature planning with approval and QA traceability",
+  "raw_input": "Build an agent workflow that preserves approval and test lineage.",
+  "actors": [
+    {
+      "name": "Solution Architect",
+      "role": "Approver",
+      "goals": ["Control scope and implementation intent"]
+    }
+  ],
+  "business_rules": ["Code generation requires an approved code plan."],
+  "constraints": [
+    {
+      "constraint_id": "CON-001",
+      "text": "The proof of concept must run without cloud LLM keys.",
+      "category": "technical",
+      "source_artifact_ids": []
+    }
+  ],
+  "non_functional_requirements": ["All outputs must be traceable."],
+  "assumptions": [],
+  "dependencies": [],
+  "open_questions": []
+}
+

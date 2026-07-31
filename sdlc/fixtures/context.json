@@ -1,0 +1,40 @@
+{
+  "context_pack_id": "CTX-SEED-001",
+  "requirement_id": "REQ-SEED-001",
+  "source_artifact_ids": ["REQ-SEED-001"],
+  "query_terms": [],
+  "provider": "fixture",
+  "items": [
+    {
+      "artifact_id": "BRD-LEGACY-001",
+      "artifact_type": "BRD",
+      "title": "Approval workflow foundation",
+      "summary": "Prior decision to make architect approval explicit and auditable.",
+      "tags": ["approval", "workflow", "audit"],
+      "relevance_score": 0.2,
+      "relationship": "RELATED_TO",
+      "metadata": {"version": 2}
+    },
+    {
+      "artifact_id": "DEC-LEGACY-001",
+      "artifact_type": "Decision",
+      "title": "Local deterministic fallback",
+      "summary": "Use versioned templates when the local model is unavailable.",
+      "tags": ["ollama", "fallback", "local"],
+      "relevance_score": 0.2,
+      "relationship": "RELATED_TO",
+      "metadata": {}
+    },
+    {
+      "artifact_id": "DEF-LEGACY-001",
+      "artifact_type": "Defect",
+      "title": "Acceptance criteria lost at QA handoff",
+      "summary": "Release handoff omitted links between tests and acceptance criteria.",
+      "tags": ["traceability", "testing", "qa"],
+      "relevance_score": 0.2,
+      "relationship": "RELATED_TO",
+      "metadata": {"severity": "high"}
+    }
+  ]
+}
+
