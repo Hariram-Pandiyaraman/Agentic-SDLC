@@ -3,6 +3,7 @@
 import io
 import json
 import zipfile
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -46,7 +47,25 @@ def create_app(
 
     @application.get("/health")
     async def health() -> dict:
-        return await collect_health(settings)
+        return await collect_health(settings, runner.database)
+
+    @application.get("/api/v1/runs")
+    def list_runs(
+        query: str | None = None,
+        status: str | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+        limit: int = 100,
+    ) -> dict:
+        if limit < 1 or limit > 500:
+            raise HTTPException(status_code=422, detail="limit must be between 1 and 500")
+        return {"runs": runner.repository.list_runs(
+            query=query, status=status, date_from=date_from, date_to=date_to, limit=limit,
+        )}
+
+    @application.get("/api/v1/approvals/pending")
+    def list_pending_approvals() -> dict:
+        return {"runs": runner.repository.list_pending_approvals()}
 
     @application.post("/api/v1/runs", status_code=201)
     def create_run(request: CreateRunRequest) -> dict:
@@ -126,14 +145,10 @@ def create_app(
     @application.get("/api/v1/runs/{run_id}/lineage")
     def get_lineage(run_id: str) -> dict:
         try:
-            records = [
-                item
-                for item in runner.store.list_artifacts(run_id)
-                if item.artifact_type == "lineage"
-            ]
-            if not records:
+            graph = runner.repository.read_lineage(run_id)
+            if not graph["nodes"]:
                 raise FileNotFoundError("lineage is available after workflow completion")
-            return json.loads(runner.store.read_artifact(run_id, records[-1].artifact_id))
+            return graph
         except (FileNotFoundError, ValueError, json.JSONDecodeError) as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 

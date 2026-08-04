@@ -2,7 +2,7 @@
 
 An end-to-end agentic SDLC proof of concept that converts a raw feature requirement into structured, traceable delivery artifacts. Eleven LangGraph agents coordinate intake, context retrieval, clarification, BRD creation, backlog planning, code generation, review, sanity validation, release handoff, and Neo4j knowledge capture.
 
-Application version: **0.2.1** (UX Phases 0 and 1 complete; later 0.2.1 phases remain in development).
+Application version: **0.2.1** (delivery Phases 0 through 3 complete; later phases remain in development).
 
 This repository contains the architecture, implementation plan, and Phase 0 application skeleton for the PoC.
 
@@ -24,6 +24,7 @@ This repository contains the architecture, implementation plan, and Phase 0 appl
 - **UI:** React 19 and Vite with a responsive liquid-glass design system
 - **API:** FastAPI with Python
 - **Orchestration:** LangGraph
+- **Persistence:** SQLAlchemy 2.x, Alembic, and SQLite by default
 - **Local model:** Ollama; `qwen2.5-coder:7b` is the recommended configurable default
 - **Knowledge graph:** Neo4j
 - **Validation:** Pydantic
@@ -194,6 +195,30 @@ Ollama and Neo4j are accessed through service interfaces. When configured fallba
 - Readable Markdown and structured-data renderers for delivery artifacts.
 - Grouped, zoomable lineage map with node details and an accessible relationship table fallback.
 
+0.2.1 Phase 3 is complete:
+
+- SQLAlchemy repository interfaces and portable relational tables for runs, artifacts, versions, sources, approvals, fallbacks, checkpoints, and lineage.
+- Alembic migrations with zero-setup SQLite startup and an explicit migration command.
+- Durable LangGraph snapshots and pending writes that preserve all approval and rejection loops across API restarts.
+- Database-backed dashboard, filter, pending-approval, artifact, and lineage queries.
+- SQLite foreign keys, WAL mode, bounded busy timeout, short transactions, and rollback coverage.
+- Database-authoritative artifact content with filesystem rematerialization for downloads and ZIP exports.
+
+### Relational database setup
+
+SQLite is the zero-configuration default. `DATABASE_URL` may override the connection;
+credentials are never returned by health endpoints. Upgrade a fresh or existing database
+using the supported Alembic wrapper:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.migrate_db
+```
+
+The API also applies pending migrations during startup. SQLite enables foreign keys, a
+five-second busy timeout, WAL journaling, and short repository transactions. Artifact
+content and workflow checkpoints are stored in the database; files remain materialized
+for exact-version downloads and ZIP export compatibility.
+
 Phase 0 is complete:
 
 - FastAPI application and `/health` readiness endpoint.
@@ -286,6 +311,8 @@ Demo assets:
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `POST` | `/api/v1/runs` | Start a feature workflow |
+| `GET` | `/api/v1/runs` | Search and filter durable run summaries |
+| `GET` | `/api/v1/approvals/pending` | List runs currently awaiting a decision |
 | `GET` | `/api/v1/runs/{run_id}` | Read status, pending approval, state, and artifacts |
 | `POST` | `/api/v1/runs/{run_id}/resume` | Approve or reject the current gate |
 | `GET` | `/api/v1/runs/{run_id}/artifacts` | List all artifact versions |

@@ -357,6 +357,8 @@ The release will:
 
 ### Phase 3 — Relational foundation and SQLite vertical slice
 
+**Status:** Complete (2026-08-04).
+
 - Add SQLAlchemy models, Alembic configuration, repositories, and transaction handling.
 - Create tables for runs, artifacts, artifact versions, artifact sources, approvals, fallback events, workflow snapshots, lineage nodes, and lineage edges.
 - Preserve stable IDs, checksums, revision rules, source links, and immutable decision history.
@@ -566,8 +568,8 @@ SQLite tests run in the normal local/CI suite. SQL Server and MySQL tests may be
 - [ ] Modern shell, dashboard, intake, run workspace, and diagnostics are complete.
 - [ ] Approval, artifact, and traceability experiences meet the UX quality bar.
 - [ ] Critical responsive, keyboard, contrast, label, focus, and error-state checks pass.
-- [ ] Relational repositories and schema are implemented.
-- [ ] SQLite critical workflows pass.
+- [x] Relational repositories and schema are implemented.
+- [x] SQLite critical workflows pass.
 - [ ] SQL Server integration and migration tests pass.
 - [ ] MySQL integration, migration tests, and Workbench checks pass.
 - [ ] Restart/resume and concurrency behavior pass on all backends.

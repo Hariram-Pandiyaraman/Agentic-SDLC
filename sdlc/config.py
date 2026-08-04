@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     use_fixture_context: bool = True
     enable_template_fallbacks: bool = True
     artifact_root: Path = Path("artifacts")
+    database_url: str | None = None
 
     @field_validator("api_base_url", "ollama_base_url", "neo4j_uri")
     @classmethod
@@ -38,6 +39,12 @@ class Settings(BaseSettings):
         if "://" not in value:
             raise ValueError("must be a full service URL including its scheme")
         return value.rstrip("/")
+
+    def resolved_database_url(self) -> str:
+        if self.database_url:
+            return self.database_url
+        path = (self.artifact_root.parent / "data" / "agentic-sdlc.db").resolve()
+        return f"sqlite:///{path.as_posix()}"
 
 
 @lru_cache

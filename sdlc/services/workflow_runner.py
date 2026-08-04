@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
 from sdlc.config import Settings, get_settings
@@ -11,6 +10,8 @@ from sdlc.models import GateDecision
 from sdlc.services.artifact_store import ArtifactStore
 from sdlc.services.generation import OllamaGenerationService
 from sdlc.services.ids import new_run_id
+from sdlc.persistence import Database, SqlAlchemyRepository
+from sdlc.persistence.checkpoint import SqlAlchemyCheckpointSaver
 
 
 class WorkflowRunner:
@@ -20,10 +21,21 @@ class WorkflowRunner:
         *,
         settings: Settings | None = None,
         generator: OllamaGenerationService | None = None,
+        database: Database | None = None,
     ) -> None:
-        self.store = ArtifactStore(artifact_root)
-        self.checkpointer = InMemorySaver()
-        self.generator = generator or OllamaGenerationService(settings or get_settings())
+        resolved_settings = settings or get_settings()
+        if database is None:
+            if resolved_settings.database_url:
+                database_url = resolved_settings.database_url
+            else:
+                database_path = (Path(artifact_root).resolve().parent / "data" / "agentic-sdlc.db")
+                database_url = f"sqlite:///{database_path.as_posix()}"
+            database = Database(database_url)
+        self.database = database
+        self.repository = SqlAlchemyRepository(database)
+        self.store = ArtifactStore(artifact_root, self.repository)
+        self.checkpointer = SqlAlchemyCheckpointSaver(self.repository)
+        self.generator = generator or OllamaGenerationService(resolved_settings)
         self.graph = build_workflow(
             self.store,
             self.checkpointer,
@@ -39,7 +51,12 @@ class WorkflowRunner:
         simulate_test_failure: bool = False,
     ) -> dict:
         resolved_run_id = run_id or new_run_id()
-        self.store.create_run(resolved_run_id)
+        self.store.create_run(
+            resolved_run_id,
+            title=title,
+            raw_requirement=raw_requirement,
+            simulate_test_failure=simulate_test_failure,
+        )
         initial_state = {
             "run_id": resolved_run_id,
             "raw_requirement": raw_requirement,
@@ -54,7 +71,9 @@ class WorkflowRunner:
             "fallback_events": [],
         }
         result = self.graph.invoke(initial_state, config=self._config(resolved_run_id))
-        return self._response(resolved_run_id, result)
+        response = self._response(resolved_run_id, result)
+        self._sync_run(response)
+        return response
 
     def resume(self, run_id: str, decision: GateDecision | dict) -> dict:
         validated = (
@@ -66,7 +85,9 @@ class WorkflowRunner:
             Command(resume=validated.model_dump(mode="json")),
             config=self._config(run_id),
         )
-        return self._response(run_id, result)
+        response = self._response(run_id, result)
+        self._sync_run(response)
+        return response
 
     def inspect(self, run_id: str) -> dict:
         self.store.load_manifest(run_id)
@@ -111,3 +132,14 @@ class WorkflowRunner:
             ],
             "state": {key: value for key, value in result.items() if key != "__interrupt__"},
         }
+
+    def _sync_run(self, response: dict) -> None:
+        interrupt = next(iter(response.get("interrupts", [])), None)
+        state = response.get("state", {})
+        self.repository.update_run(
+            response["run_id"],
+            title=state.get("requirement_title", "New feature"),
+            status=response.get("status", state.get("status", "running")),
+            current_node=state.get("current_node", "start"),
+            current_gate=interrupt["value"].get("gate") if interrupt else None,
+        )

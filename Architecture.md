@@ -198,7 +198,21 @@ flowchart LR
 
 The demo starts with seeded mock nodes representing earlier BRDs, decisions, reusable patterns, and defects. If Neo4j is unavailable, a fixture-backed context provider and local lineage JSON preserve the demonstration path.
 
-### 4.6 Artifact Store
+### 4.6 Relational Persistence and Artifact Materialization
+
+SQLAlchemy repositories are the application persistence boundary. Alembic owns schema
+changes, and `DATABASE_URL` selects the database without workflow, API, or UI branches.
+SQLite is the zero-setup default with foreign keys, WAL journaling, a bounded busy timeout,
+and short transactions. Runs, immutable artifact versions and content, version-aware source
+links, approvals, fallbacks, workflow snapshots, pending checkpoint writes, and lineage are
+stored relationally.
+
+The SQLAlchemy-backed LangGraph checkpointer persists both checkpoints and interrupt writes,
+so every HITL pause and rejection loop can be inspected and resumed after process restart.
+Relational lineage remains authoritative even when optional Neo4j projection is unavailable.
+
+For download and export compatibility, every run also materializes human-readable JSON and
+Markdown artifacts beneath:
 
 Every run writes human-readable JSON and Markdown artifacts beneath:
 
@@ -222,7 +236,10 @@ artifacts/
     lineage.json
 ```
 
-`manifest.json` is the authoritative index and includes artifact IDs, types, versions, checksums, creation timestamps, producer agents, source IDs, approval state, and file locations.
+`manifest.json` is a generated compatibility index containing artifact IDs, types, versions,
+checksums, creation timestamps, producer agents, source IDs, approval state, and file
+locations. It can be reconstructed with missing artifact files from authoritative relational
+content before export.
 
 ## 5. Agent Responsibilities
 
@@ -265,7 +282,9 @@ class WorkflowState(TypedDict):
     fallback_events: list[dict]
 ```
 
-Checkpoint state after each node. A run can then be inspected, resumed after an approval, or retried without repeating completed work.
+Checkpoint state after each node is stored through the relational checkpointer. A run can
+therefore be inspected, resumed after an approval, or retried after API/process restart
+without repeating completed work.
 
 ## 7. Traceability and Versioning
 

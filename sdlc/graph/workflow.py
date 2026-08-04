@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
@@ -814,7 +815,7 @@ Critical path: approved BRD → approved code plan → sanity result → QA hand
 
 def build_workflow(
     store: ArtifactStore,
-    checkpointer: InMemorySaver | None = None,
+    checkpointer: BaseCheckpointSaver | None = None,
     generator: OllamaGenerationService | None = None,
 ):
     nodes = WorkflowNodes(store, generator)
