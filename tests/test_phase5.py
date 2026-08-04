@@ -1,4 +1,3 @@
-import ast
 from pathlib import Path
 
 from scripts.run_demo import run_demo
@@ -87,9 +86,12 @@ def test_seeded_demo_qualifies_passing_and_failed_sanity_runs(tmp_path) -> None:
     ).read_text(encoding="utf-8")
 
 
-def test_streamlit_console_source_is_valid() -> None:
-    source = Path("app/streamlit_app.py").read_text(encoding="utf-8")
-    ast.parse(source)
-    assert 'st.form("new-run")' in source
-    assert "render_approval(current_run)" in source
-    assert "render_lineage(run[\"run_id\"])" in source
+def test_react_console_contract_is_present() -> None:
+    source = Path("frontend/src/main.jsx").read_text(encoding="utf-8")
+    styles = Path("frontend/src/styles.css").read_text(encoding="utf-8")
+    package = Path("frontend/package.json").read_text(encoding="utf-8")
+    assert "function NewRun()" in source
+    assert "function ApprovalModal" in source
+    assert "function Traceability" in source
+    assert "backdrop-filter" in styles
+    assert '"react"' in package

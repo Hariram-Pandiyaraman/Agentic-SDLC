@@ -16,7 +16,7 @@ The proof of concept prioritizes:
 
 | Layer | Technology | Responsibility |
 |---|---|---|
-| User interface | Streamlit | Requirement input, artifact display, approval actions, and run status |
+| User interface | React + Vite | Multipage requirement intake, artifact review, approval actions, lineage, and run status |
 | Backend API | FastAPI on Python | Workflow endpoints, validation, artifact access, and health checks |
 | Agent orchestration | LangGraph | Stateful agent workflow, routing, retries, checkpoints, and HITL pauses |
 | Local language model | Ollama | Local generation with no external LLM API key |
@@ -32,7 +32,7 @@ Recommended baseline Ollama model: `qwen2.5-coder:7b`. It offers a practical bal
 ```mermaid
 flowchart LR
     Architect[Architect / Demo User]
-    UI[Streamlit UI]
+    UI[React UI]
     API[FastAPI API]
     Graph[LangGraph Orchestrator]
     LLM[Ollama]
@@ -51,11 +51,11 @@ flowchart LR
     API --> UI
 ```
 
-All services run locally for the PoC. The Streamlit application communicates with FastAPI rather than invoking agents directly. FastAPI starts or resumes the LangGraph workflow and exposes generated artifacts. LangGraph owns workflow state and calls Ollama, Neo4j, the artifact store, and safe local Git operations.
+All services run locally for the PoC. The React application communicates with FastAPI rather than invoking agents directly. FastAPI starts or resumes the LangGraph workflow and exposes generated artifacts. LangGraph owns workflow state and calls Ollama, Neo4j, the artifact store, and safe local Git operations.
 
 ## 4. Logical Components
 
-### 4.1 Streamlit UI
+### 4.1 React UI
 
 The UI provides:
 
@@ -298,7 +298,7 @@ Three approval gates keep the architect in control:
 2. **BRD gate:** approve or request changes to the business requirements.
 3. **Code-plan gate:** approve design intent before implementation generation.
 
-LangGraph interrupts the run at each gate. FastAPI returns `WAITING_FOR_APPROVAL`, and Streamlit shows the artifact, decision controls, and an optional comment field. Rejections append feedback and route back to the owning agent without erasing earlier versions.
+LangGraph interrupts the run at each gate. FastAPI returns `WAITING_FOR_APPROVAL`, and React shows the artifact, decision controls, and an optional comment field. Rejections append feedback and route back to the owning agent without erasing earlier versions.
 
 ## 9. Reliability and Failure Handling
 
@@ -333,8 +333,12 @@ Authentication and role-based access are deferred for the hackathon PoC, but the
 │   ├── main.py
 │   ├── routes/
 │   └── schemas/
-├── app/
-│   └── streamlit_app.py
+├── frontend/
+│   ├── src/
+│   │   ├── main.jsx
+│   │   └── styles.css
+│   ├── package.json
+│   └── vite.config.js
 ├── sdlc/
 │   ├── agents/
 │   ├── graph/
@@ -381,4 +385,3 @@ Deferred:
 - Enterprise-scale document parsing.
 - Concurrent multi-tenant workflows.
 - Production observability, high availability, and backup.
-

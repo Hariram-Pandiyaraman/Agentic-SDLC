@@ -17,6 +17,8 @@ class ResumeRunRequest(ApiModel):
     status: str
     actor: str = Field(min_length=1, max_length=200)
     comment: str | None = Field(default=None, max_length=2_000)
+    artifact_id: str | None = Field(default=None, min_length=1, max_length=200)
+    artifact_version: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     def validate_decision(self) -> "ResumeRunRequest":
@@ -24,5 +26,6 @@ class ResumeRunRequest(ApiModel):
             raise ValueError("status must be 'approved' or 'rejected'")
         if self.status == "rejected" and not self.comment:
             raise ValueError("a rejection must include a comment")
+        if (self.artifact_id is None) != (self.artifact_version is None):
+            raise ValueError("artifact_id and artifact_version must be provided together")
         return self
-

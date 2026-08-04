@@ -169,13 +169,13 @@ class ArtifactStore:
         temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
         temporary.write_text(content, encoding="utf-8")
         try:
-            for attempt in range(5):
+            for attempt in range(8):
                 try:
                     os.replace(temporary, path)
                     return
                 except PermissionError:
-                    if attempt == 4:
+                    if attempt == 7:
                         raise
-                    time.sleep(0.02 * (attempt + 1))
+                    time.sleep(0.05 * (attempt + 1))
         finally:
             temporary.unlink(missing_ok=True)

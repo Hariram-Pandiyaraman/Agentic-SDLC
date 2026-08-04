@@ -2,6 +2,8 @@
 
 An end-to-end agentic SDLC proof of concept that converts a raw feature requirement into structured, traceable delivery artifacts. Eleven LangGraph agents coordinate intake, context retrieval, clarification, BRD creation, backlog planning, code generation, review, sanity validation, release handoff, and Neo4j knowledge capture.
 
+Application version: **0.2.1** (UX Phases 0 and 1 complete; later 0.2.1 phases remain in development).
+
 This repository contains the architecture, implementation plan, and Phase 0 application skeleton for the PoC.
 
 ## What the PoC Demonstrates
@@ -19,7 +21,7 @@ This repository contains the architecture, implementation plan, and Phase 0 appl
 
 ## Technology Stack
 
-- **UI:** Streamlit
+- **UI:** React 19 and Vite with a responsive liquid-glass design system
 - **API:** FastAPI with Python
 - **Orchestration:** LangGraph
 - **Local model:** Ollama; `qwen2.5-coder:7b` is the recommended configurable default
@@ -131,16 +133,18 @@ If Neo4j is not available, set `USE_FIXTURE_CONTEXT=true`. The application shoul
 .\scripts\run_api.ps1
 ```
 
-### 6. Start Streamlit in another terminal
+### 6. Install and start the React UI in another terminal
 
 ```powershell
+npm install --prefix frontend
 .\scripts\run_ui.ps1
 ```
 
-The scripts invoke executables inside `.venv` explicitly. This prevents Windows
-from accidentally using a globally installed `uvicorn` or `streamlit`.
+The API script invokes the executable inside `.venv`; the UI script starts the
+workspace-local Vite installation. During development, Vite proxies `/api` and
+`/health` requests to FastAPI on port 8000.
 
-Open `http://localhost:8501`.
+Open `http://localhost:5173`.
 
 ### 7. Run tests
 
@@ -164,10 +168,36 @@ Ollama and Neo4j are accessed through service interfaces. When configured fallba
 
 ## Current Status
 
+0.2.1 Phase 0 is complete:
+
+- One explicit `0.2.1` package and API version.
+- Workspace-local pytest temp and cache paths for reliable Windows runs.
+- Regression contracts for API response shapes, exact artifact versions, content headers, and checksums.
+- Designed treatments for first-use, running, approval, rejected, failed, fallback, and complete states.
+- Reusable tokens and component contracts with automated WCAG AA contrast checks.
+- The compact [UX foundation specification](docs/ux-foundation.md).
+
+0.2.1 Phase 1 is complete:
+
+- Responsive branded application shell with persistent desktop navigation and a tablet menu.
+- Dashboard summary cards for active, approval, complete, failure, and fallback signals.
+- Recent-run search plus status and date filters, with intentional loading, empty, filtered-empty, and API-unavailable states.
+- Guided three-step requirement intake with inline validation, text/Markdown import preview, progressive advanced options, and a clear launch transition.
+- Compact service-status popover with full environment diagnostics moved to Settings.
+
+0.2.1 Phase 2 is complete:
+
+- Run header with current stage, elapsed and updated time, fallback count, and a contextual next action.
+- Accessible workflow stepper and combined agent/HITL activity timeline.
+- Side-by-side approval review with exact artifact/version locking, decision history, and required rejection comments.
+- Artifact card/table views, type and producer filters, version history, metadata, formatted/raw presentations, and exact-version downloads.
+- Readable Markdown and structured-data renderers for delivery artifacts.
+- Grouped, zoomable lineage map with node details and an accessible relationship table fallback.
+
 Phase 0 is complete:
 
 - FastAPI application and `/health` readiness endpoint.
-- Streamlit service-readiness page.
+- React service-readiness page and environment diagnostics.
 - Typed environment configuration.
 - Project-local Python virtual environment.
 - Dependency manifest and `.env.example`.
@@ -210,7 +240,7 @@ Phase 4 is complete:
 
 - FastAPI create, status, resume, artifact, lineage, and export endpoints.
 - Process-local workflow runner that preserves HITL checkpoints.
-- Streamlit text/file requirement submission.
+- Guided React text/file requirement submission.
 - Agent progress and fallback visibility.
 - Scope, BRD, and code-plan approval/rejection panels.
 - Exact artifact-revision display and downloads.
@@ -224,7 +254,7 @@ Phase 5 is complete:
 - Passing and failed-sanity demo validation.
 - Final handoff-readiness checks for required artifacts, source linkage, AC coverage, and defects.
 - Contract coverage for every generative prompt task.
-- Clean native FastAPI and Streamlit HTTP startup probes.
+- Clean native FastAPI startup probes and a production React build.
 - Full automated regression suite.
 
 Ollama and Neo4j are not currently installed locally, so health reports a degraded service state while the fallback path remains ready. The Ollama structured-generation path is tested with mock model responses; a live Ollama inference test requires installing the Ollama application.
@@ -265,7 +295,7 @@ Demo assets:
 
 Interactive API documentation is available at `http://localhost:8000/docs`.
 
-The API and Streamlit UI must point to the same running FastAPI process because Phase 4 checkpoints use LangGraph's in-memory saver. Generated artifacts remain on disk, but interrupted runs cannot be resumed after an API restart.
+The API and React UI must point to the same running FastAPI process because Phase 4 checkpoints use LangGraph's in-memory saver. Generated artifacts remain on disk, but interrupted runs cannot be resumed after an API restart.
 
 ### Programmatic workflow example
 

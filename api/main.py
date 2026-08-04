@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response, StreamingResponse
 
 from api.schemas import CreateRunRequest, ResumeRunRequest
+from sdlc import __version__
 from sdlc.config import Settings, get_settings
 from sdlc.services.health import collect_health
 from sdlc.services.workflow_runner import WorkflowRunner
@@ -27,7 +28,7 @@ def create_app(
     application = FastAPI(
         title="SDLC Agentic Framework API",
         description="Local API for the agentic SDLC proof of concept.",
-        version="0.4.0",
+        version=__version__,
     )
     application.state.settings = settings
     application.state.runner = runner
@@ -36,6 +37,7 @@ def create_app(
     async def root() -> dict[str, str]:
         return {
             "name": application.title,
+            "version": __version__,
             "environment": settings.app_env,
             "docs": "/docs",
             "health": "/health",
@@ -68,7 +70,21 @@ def create_app(
     def resume_run(run_id: str, request: ResumeRunRequest) -> dict:
         try:
             runner.store.load_manifest(run_id)
-            return runner.resume(run_id, request.model_dump())
+            if request.artifact_id is not None:
+                current = runner.inspect(run_id)
+                interrupt = next(iter(current["interrupts"]), None)
+                expected_id = interrupt and interrupt["value"].get("artifact_id")
+                if request.artifact_id != expected_id:
+                    raise ValueError(
+                        f"approval target changed; expected {expected_id or 'no pending artifact'}"
+                    )
+                latest = runner.store.get_artifact(run_id, request.artifact_id)
+                if request.artifact_version != latest.version:
+                    raise ValueError(
+                        f"approval target changed; latest version is {latest.version}"
+                    )
+            decision = request.model_dump(exclude={"artifact_id", "artifact_version"})
+            return runner.resume(run_id, decision)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
